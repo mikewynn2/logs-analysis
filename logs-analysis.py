@@ -35,16 +35,18 @@ def top_three_articles():
 def most_popular_authors():
     # 2. Who are the most popular article authors of all time?
     query = """
-    SELECT name, COUNT(*) AS views
-    FROM authors, articles, log
-    WHERE authors.id = articles.author AND log.path LIKE '/article%'
+    SELECT COUNT(*) AS views, name
+    FROM log
+        JOIN articles ON RIGHT(path, -9) = articles.slug
+        JOIN authors ON authors.id = articles.author
+    WHERE path LIKE '/article%'
     GROUP BY name
     ORDER BY views DESC;
     """
     result = fetch_data(query)
     print('The most popular article authors of all time:')
     print('')
-    for name, views in result:
+    for views, name in result:
         print('- {name} -- {views} Views'.format(name=name, views=views))
 
 
@@ -53,7 +55,8 @@ def error_days():
     query = """
     SELECT err_percent, day
     FROM (
-        SELECT (err_count / CAST (total AS DOUBLE PRECISION)) AS err_percent, err_log.day
+        SELECT (err_count / CAST (total AS DOUBLE PRECISION))
+            AS err_percent, err_log.day
         FROM (
                 SELECT COUNT(*) AS total, date(time) AS day
                 FROM log
@@ -72,7 +75,7 @@ def error_days():
     print('Dates where more than 1% of requests lead to errors:')
     print('')
     for percent, day in result:
-        print('- ' + day.strftime('%B %d, %Y') + ' -- ' + str(round(percent * 100, 1)) + '% errors')
+        print('-  {:%B %d, %Y} -- {:.1%} errors'.format(day, percent))
 
 
 if __name__ == '__main__':
