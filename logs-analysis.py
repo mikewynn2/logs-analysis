@@ -65,7 +65,7 @@ def error_days():
             JOIN (
                 SELECT COUNT(*) AS err_count, date(time) AS day
                 FROM log
-                WHERE status LIKE '404%'
+                WHERE status != '200 OK'
                 GROUP BY day
             ) AS err_log ON err_log.day = total_log.day
     ) AS percent_log
